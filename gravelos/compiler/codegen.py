@@ -8,7 +8,7 @@ OP_TO_MNEMONIC = {
     '<<': 'HEAVE', '>>': 'PULL'
 }
 
-# Python transpilation targets (For educational Transpiler demonstration)
+# Python transpilation targets
 OP_TO_PYTHON = {
     '+': '+', '-': '-', '&': '&', '|': '|', '^': '^', '<<': '<<', '>>': '>>'
 }
@@ -19,11 +19,11 @@ class EducationalCodeGenerator:
     Unlike standard compilers, this one narrates its decisions for the student.
     """
     def __init__(self):
-        self.instructions: List[str] =[]
-        self.educational_log: List[str] =[] # Tracks the "why" of compiler decisions
-        self.free_registers = [f"R{i}" for i in reversed(range(8))] # R7 down to R0
+        self.instructions: List[str] = []
+        self.educational_log: List[str] =[] 
+        self.free_registers = [f"R{i}" for i in reversed(range(8))] 
         self.symbol_table: Dict[str, int] = {}
-        self.next_vram_address = 0x10  # User memory starts here to avoid IVT
+        self.next_vram_address = 0x10  
         self.max_stack_depth = 0
 
     def alloc_reg(self, reason: str) -> str:
@@ -43,8 +43,6 @@ class EducationalCodeGenerator:
             self.educational_log.append(f"  [dim]Freed {reg} back to the pool.[/dim]")
 
     def emit(self, inst: str, educational_comment: str):
-        """Emits assembly with DWARF-style educational comments"""
-        # Padding to make assembly line up beautifully
         padded_inst = inst.ljust(25)
         self.instructions.append(f"{padded_inst} ; [LEARN] {educational_comment}")
 
@@ -64,17 +62,12 @@ class EducationalCodeGenerator:
         
         return "\n".join(self.instructions), "\n".join(self.educational_log)
 
-    # ---- VISITOR PATTERN IMPLEMENTATIONS ----
-
     def visit(self, node: ASTNode) -> Optional[str]:
         meth = getattr(self, f'visit_{type(node).__name__}')
         return meth(node)
 
     def visit_Assign(self, node: Assign) -> Optional[str]:
-        # 1. Evaluate the expression first
         val_reg = self.visit(node.expr)
-        
-        # 2. Assign memory address mapping
         if node.name == "VRAM_TARGET":
             addr = 0xF0
             comment = f"Memory-mapped hardware pointer directly targets Address 0xF0"
@@ -111,7 +104,6 @@ class EducationalCodeGenerator:
             addr = 0xF0
         else:
             if node.name not in self.symbol_table:
-                # To prevent compiler crash on undefined vars, auto-init to 0
                 self.symbol_table[node.name] = self.next_vram_address
                 self.next_vram_address += 2
                 self.emit(f"ECHO {reg}, 0", f"Implicit void initialization for undeclared var '{node.name}'")
@@ -120,12 +112,8 @@ class EducationalCodeGenerator:
         self.emit(f"HAUL {reg}, [0x{addr:02X}]", f"Fetch 16-bit word from memory pointer for '{node.name}'")
         return reg
 
-    # ---- EDUCATIONAL TRANSPILER DEMO ----
     def generate_python(self, node: Program) -> str:
-        """
-        Instead of targeting Assembly, target High-Level Python!
-        This teaches the user the difference between a Compiler and Transpiler.
-        """
+        """Translating RUNE AST into Python 3.x Source Code."""
         output = ["# === GRAVELOS EDUCATIONAL TRANSPILER ==="]
         output.append("# Translating RUNE AST into Python 3.x Source Code\n")
         
@@ -136,13 +124,63 @@ class EducationalCodeGenerator:
         return "\n".join(output)
         
     def _transpile_expr(self, node: ASTNode) -> str:
-        if isinstance(node, Num):
-            return str(node.value)
-        elif isinstance(node, Var):
-            return node.name
+        if isinstance(node, Num): return str(node.value)
+        elif isinstance(node, Var): return node.name
         elif isinstance(node, BinOp):
             l = self._transpile_expr(node.left)
             r = self._transpile_expr(node.right)
             py_op = OP_TO_PYTHON[node.op]
             return f"({l} {py_op} {r})"
         return "UNKNOWN"
+
+    def generate_rock_instructions(self, node: Program, machine_code: List[int]) -> str:
+        """
+        Transpiles the software directly into a physical setup manual.
+        This explicitly demonstrates how semantic AST commands and 
+        compiled machine code manifest in bare-metal reality.
+        """
+        output = ["[bold cyan]=== PHYSICAL LITHIC DEPLOYMENT MANUAL ===[/bold cyan]"]
+        output.append("A Wizard's guide to translating compiled software into a literal hardware layout.\n")
+        
+        output.append("[bold yellow]PHASE 1: THE SEMANTIC RITUAL (AST Translation)[/bold yellow]")
+        output.append("[dim]This translates high-level semantic intent into literal physical actions.[/dim]")
+        step_idx = 1
+        
+        # Traverse AST for physical meaning
+        for stmt in node.statements:
+            if isinstance(stmt, Assign):
+                output.append(f"\n[bold white]Step {step_idx}. Variable Assignment ({stmt.name})[/bold white]")
+                output.append(f"   - Grab an empty D-Flip-Flop memory rock. Paint the rune '{stmt.name}' on it.")
+                output.append(f"   - Set the rock on the ground. Wait for the ALU result to propagate acoustically.")
+                output.append(f"   - When heard, strike it with a tuning fork to lock its acoustic state.")
+            elif isinstance(stmt, Num):
+                output.append(f"\n[bold white]Step {step_idx}. Immediate Value Encoding ({stmt.value})[/bold white]")
+                output.append(f"   - Scoop up a cluster of 16 empty pebbles (a physical CPU Register).")
+                output.append(f"   - Enchant them to constantly vibrate at the harmonic harmonic matching {stmt.value}.")
+            elif isinstance(stmt, BinOp):
+                op_boulder = {"+": "ADD (SCREAM)", "-": "SUB (BELLOW)", "&": "AND (CLANG)", "|": "OR (CRASH)", "^": "XOR (SMASH)", "<<": "L-SHIFT (HEAVE)", ">>": "R-SHIFT (PULL)"}.get(stmt.op, "UNKNOWN")
+                output.append(f"\n[bold white]Step {step_idx}. Physical ALU Execution ({stmt.op})[/bold white]")
+                output.append(f"   - Carry your two input register pebble-clusters toward the central {op_boulder} Boulder.")
+                output.append(f"   - Set the pebbles on the ground facing the gate. Step back.")
+                output.append(f"   - The Boulder will process their combined acoustics and scream the result.")
+            step_idx += 1
+            
+        output.append("\n\n[bold yellow]PHASE 2: BARE-METAL BOOTLOADER SEQUENCE (Memory Scribing)[/bold yellow]")
+        output.append("[dim]Before turning the machine on, you must manually toggle the state of physical RAM stones to flash the binary executable.[/dim]")
+        
+        # Output exact 16-bit bare metal arrays
+        addr = 0x08
+        for word in machine_code:
+            bin_str = f"{word:016b}"
+            chant = " ".join(["[bold green]BING[/]" if b=="1" else "[dim red]BONG[/]" for b in bin_str])
+            output.append(f"\n[bold magenta]Go to Dungeon Coordinates (Address 0x{addr:02X})[/bold magenta]")
+            output.append("   - Locate the row of 16 memory pebbles embedded in the floor here.")
+            output.append("   - Tap them left-to-right to enforce the following states:")
+            output.append(f"   {chant}")
+            addr += 2
+            
+        output.append("\n[bold red]PHASE 3: IGNITION[/bold red]")
+        output.append("   - Strike the MASTER_CLK oscillator rock heavily with a warhammer.")
+        output.append("   - The software will immediately begin execution at the speed of sound.")
+        
+        return "\n".join(output)

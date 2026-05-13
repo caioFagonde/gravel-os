@@ -9,6 +9,7 @@ from rich.table import Table
 from gravelos.compiler.lexer import tokenize
 from gravelos.compiler.parser import Parser
 from gravelos.compiler.codegen import EducationalCodeGenerator
+from gravelos.isa.assembler import LithicAssembler
 from gravelos.core.exceptions import RegisterExhaustionError, ParseException
 
 class EducationalRuneIDE(App):
@@ -29,14 +30,16 @@ class EducationalRuneIDE(App):
         with TabbedContent(id="tabs"):
             with TabPane("1. Lexer (Tokens)"):
                 yield RichLog(id="log-lexer", markup=True)
-            with TabPane("2. Parser (AST Tree)"):
+            with TabPane("2. Parser (AST)"):
                 yield RichLog(id="log-ast", markup=True)
-            with TabPane("3. Register Allocator"):
+            with TabPane("3. CodeGen / Registers"):
                 yield RichLog(id="log-alloc", markup=True)
-            with TabPane("4. LITHIC Assembly"):
+            with TabPane("4. Target: LITHIC Assembly"):
                 yield RichLog(id="log-asm", markup=True)
-            with TabPane("5. Transpiler Target"):
+            with TabPane("5. Target: Python Code"):
                 yield RichLog(id="log-transpiled", markup=True)
+            with TabPane("6. Target: Physical Rocks"):
+                yield RichLog(id="log-rocks", markup=True)
                 
         yield Footer()
 
@@ -51,6 +54,7 @@ class EducationalRuneIDE(App):
             "alloc": self.query_one("#log-alloc", RichLog),
             "asm": self.query_one("#log-asm", RichLog),
             "transpiled": self.query_one("#log-transpiled", RichLog),
+            "rocks": self.query_one("#log-rocks", RichLog),
         }
         for log in logs.values(): log.clear()
 
@@ -73,12 +77,17 @@ class EducationalRuneIDE(App):
             asm_fmt = lithic_asm.replace("SCREAM", "[red]SCREAM[/]").replace("ECHO", "[green]ECHO[/]").replace("PLACE", "[magenta]PLACE[/]").replace("; [LEARN]", "[dim yellow];[/dim yellow]")
             logs["asm"].write(Panel(Text.from_markup(asm_fmt), title="Generated Machine Assembly", subtitle="Annotated with DWARF-style educational comments"))
 
-            # Phase 4: TRANSPILER TARGET (Source to Source mapping)
-            python_code = EducationalCodeGenerator().generate_python(ast_root)
-            logs["transpiled"].write(Panel(f"[bold green]{python_code}[/]", title="Transpiled Output (Target: Python 3)", subtitle="Demonstrating a backend swapping AST out to high level language!"))
+            # Phase 4: PYTHON TRANSPILER TARGET
+            python_code = codegen.generate_python(ast_root)
+            logs["transpiled"].write(Panel(f"[bold green]{python_code}[/]", title="Transpiled Output (Target: Python 3)", subtitle="Demonstrating a backend swapping AST out to a high-level language!"))
+
+            # Phase 5: PHYSICAL ROCK TRANSPILER TARGET
+            machine_code = LithicAssembler(offset=0x08).assemble(lithic_asm)
+            rock_manual = codegen.generate_rock_instructions(ast_root, machine_code)
+            logs["rocks"].write(Panel(Text.from_markup(rock_manual), title="Physical Lithic Substrate Instructions", subtitle="The literal instructions to run this program in reality."))
 
         except Exception as e:
-            # Print exceptions across all active panes so the user isn't confused why it broke
+            # Broadcast the error visually so the student knows EXACTLY what caused the logic breakdown
             error_art = f"[bold red]CATASTROPHIC COMPILER ERROR[/bold red]\n\n[yellow]{str(e)}[/yellow]"
             for log in logs.values():
                 log.write(Panel(error_art, border_style="red", box=box.ROUNDED))
