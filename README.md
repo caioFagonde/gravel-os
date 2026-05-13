@@ -67,8 +67,7 @@ source venv/bin/activate  # Or `venv\Scripts\activate` on Windows
 pip install -e .
 💻 Command Line Interface (CLI)
 GravelOS comes with a powerful command-line interface.
-'''
-
+```
 
 1. The Pedagogical Compiler IDE
 Launch the multi-pane Textual UI. Write high-level RUNE code and watch it transform across 5 live-updating tabs (Lexer, AST, Allocator, LITHIC-ASM, Python Transpilation).
