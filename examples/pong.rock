@@ -1,0 +1,28 @@
+; Hand-compiled Pong Routine 
+; Will natively trap within boundaries if processed
+ECHO R0, 1
+ECHO R1, 1
+ECHO R2, 0
+ECHO R3, 14
+ECHO R7, 0
+ECHO R4, 15
+HEAVE R4, R4, 4   ; Address Target Memory Map = 0xF0
+
+LOOP:
+SCREAM R0, R0, R1 ; Position Physics Vector Change
+PLACE R0, R4
+
+STOMP R0, R3
+LEAPZ HIT_RIGHT
+STOMP R0, R2
+LEAPZ HIT_LEFT
+LEAP LOOP
+
+HIT_RIGHT:
+ECHO R1, 1
+BELLOW R1, R7, R1 ; Invert trajectory Negative Axis
+LEAP LOOP
+
+HIT_LEFT:
+ECHO R1, 1        ; Correct axis orientation 
+LEAP LOOP

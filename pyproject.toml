@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gravelos"
+version = "4.0.0"
+description = "A strictly enforced 16-bit acoustic computing architecture made of rocks."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rich>=13.0.0",
+    "textual>=0.40.0"
+]
+
+[project.scripts]
+gravelos = "gravelos.cli:main"

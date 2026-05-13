@@ -1,0 +1,6 @@
+# Simple sequence. Store latest generation result mapped over memory output
+
+let start = 0
+let n1 = 1
+let result = start + n1
+VRAM_TARGET = result
